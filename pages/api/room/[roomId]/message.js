@@ -4,38 +4,41 @@ import { v4 as uuidv4 } from "uuid";
 export default function roomIdMessageRoute(req, res) {
   if (req.method === "GET") {
     const rooms = readDB();
+    const id = req.query.roomId;
+    const roomIdIDX = rooms.findIndex((x) => x.roomId === id);
 
-    const { roomId } = req.query;
-    const room = rooms.find((room) => room.roomId === roomId);
-    if (room == undefined) {
-      return res.status(404).json({ ok: false, message: "Invalid room id" });
-    } else {
-      return res.json({ ok: true, message: room.messages });
-    }
+    if (roomIdIDX === -1)
+      return res.status(404).json({
+        ok: false,
+        message: "Invalid room id",
+      });
+    const messages = rooms[roomIdIDX].messages;
+    return res.json({
+      ok: true,
+      messages,
+    });
   } else if (req.method === "POST") {
     const rooms = readDB();
-
+    const id = req.query.roomId;
+    const roomIdIDX = rooms.findIndex((x) => x.roomId === id);
     //read request body
     const text = req.body.text;
-
-    const { roomId } = req.query;
-    const room = rooms.find((room) => room.roomId === roomId);
-
-    if (room == undefined) {
-      return res.status(404).json({ ok: false, message: "Invalid room id" });
-    } else if (typeof text != "string") {
-      return res.status(404).json({ ok: false, message: "Invalid text input" });
+    //create new id
+    const newId = uuidv4();
+    if (roomIdIDX === -1)
+      return res.status(404).json({
+        ok: false,
+        message: "Invalid room id",
+      });
+    if (typeof text !== "string") {
+      return res.status(400).json({ ok: false, message: "Invalid text input" });
     } else {
-      //create new id
-      const newId = uuidv4();
-      const message = {
+      const newtext = {
         messageId: newId,
         text: text,
       };
-      room.messages.push(message);
       writeDB(rooms);
-
-      return res.json({ ok: true, message });
+      return res.json({ ok: true, message: newtext });
     }
   }
 }
