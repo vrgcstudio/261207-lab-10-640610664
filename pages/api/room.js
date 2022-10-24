@@ -10,6 +10,10 @@ export default function roomRoute(req, res) {
       roomName: room.roomName,
     });
   }
-
-  return res.json({ ok: true, result });
+  if (req.method === "GET") {
+    return res.json({
+      ok: true,
+      result,
+    });
+  }
 }
